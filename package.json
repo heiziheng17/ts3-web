@@ -1,15 +1,19 @@
 {
   "name": "ts3-web",
   "version": "1.0.0",
-  "description": "TeamSpeak3 Server Web Interface",
+  "description": "TeamSpeak 3 Server Web Interface",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "build": "node build.js"
   },
   "dependencies": {
+    "dotenv": "^16.3.1",
     "express": "^4.18.2",
-    "ts3-nodejs-library": "^3.5.1",
-    "dotenv": "^16.3.1"
+    "ts3-nodejs-library": "^3.5.1"
+  },
+  "devDependencies": {
+    "javascript-obfuscator": "^4.2.2"
   }
 }
