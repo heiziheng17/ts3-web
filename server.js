@@ -158,6 +158,16 @@ app.get('/api/config', (req, res) => {
       windows: process.env.DOWNLOAD_WINDOWS || 'https://www.teamspeak.com/downloads',
       macos: process.env.DOWNLOAD_MACOS || 'https://www.teamspeak.com/downloads',
       linux: process.env.DOWNLOAD_LINUX || 'https://www.teamspeak.com/downloads',
+    },
+    backup: {
+      yy: {
+        enabled: !!process.env.YY_CHANNEL_ID,
+        channelId: process.env.YY_CHANNEL_ID || '',
+      },
+      kook: {
+        enabled: !!process.env.KOOK_URL,
+        url: process.env.KOOK_URL || '',
+      }
     }
   });
 });
