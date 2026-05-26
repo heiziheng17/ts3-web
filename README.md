@@ -10,8 +10,11 @@ TeamSpeak 3 服务器 Web 管理界面。
 - 在线用户列表（所在频道、延迟、客户端平台）
 - 一键连接（复制地址 / 启动客户端）
 - 客户端下载链接
-- 深色/浅色主题切换
-- 5 秒自动刷新
+- 备用语音方案（YY / KOOK）
+- 自动主题切换（根据北京日出日落）
+- 深色/浅色/自动三种主题模式
+- 服务器端数据缓存（10秒刷新）
+- 用户使用指南弹窗
 
 ## 部署
 
@@ -23,7 +26,7 @@ TeamSpeak 3 服务器 Web 管理界面。
 ### 安装
 
 ```bash
-git clone <your-repo-url>
+git clone https://gitee.com/dalovemoli/ts3-web.git
 cd ts3-web
 npm install
 ```
@@ -59,6 +62,12 @@ WEB_PORT=3000
 DOWNLOAD_WINDOWS=https://www.teamspeak.com/downloads
 DOWNLOAD_MACOS=https://www.teamspeak.com/downloads
 DOWNLOAD_LINUX=https://www.teamspeak.com/downloads
+
+# YY频道号（备用方案，留空则不显示）
+YY_CHANNEL_ID=
+
+# KOOK频道链接（备用方案，留空则不显示）
+KOOK_URL=
 ```
 
 ### 运行
@@ -68,6 +77,20 @@ npm start
 ```
 
 访问 `http://localhost:3000`
+
+### 生产部署
+
+```bash
+# 安装 pm2
+npm install -g pm2
+
+# 启动服务
+pm2 start server.js --name ts3-web
+
+# 保存并设置开机自启
+pm2 save
+pm2 startup
+```
 
 ### 模拟模式
 
@@ -105,14 +128,19 @@ ts3-web/
 │   └── index.html      # 前端界面
 ├── package.json
 ├── .env.example        # 配置模板
-└── .gitignore
+├── .gitignore
+└── README.md
 ```
 
 ## API
 
 | 端点 | 说明 |
 |------|------|
-| `GET /api/config` | 站点配置、下载地址 |
+| `GET /api/config` | 站点配置、下载地址、备用方案 |
 | `GET /api/status` | 服务器状态 |
 | `GET /api/channels` | 频道列表（树形） |
 | `GET /api/clients` | 在线用户列表 |
+
+## 开源仓库
+
+https://gitee.com/dalovemoli/ts3-web
