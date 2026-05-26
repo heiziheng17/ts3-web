@@ -14,7 +14,8 @@ TeamSpeak 3 服务器 Web 管理界面。
 - 自动主题切换（根据北京日出日落）
 - 深色/浅色/自动三种主题模式
 - 服务器端数据缓存（10秒刷新）
-- 用户使用指南弹窗
+- 用户使用指南（含汉化教程）
+- 前端代码混淆保护
 
 ## 部署
 
@@ -73,6 +74,10 @@ KOOK_URL=
 ### 运行
 
 ```bash
+# 构建混淆版本
+npm run build
+
+# 启动服务
 npm start
 ```
 
@@ -84,7 +89,8 @@ npm start
 # 安装 pm2
 npm install -g pm2
 
-# 启动服务
+# 构建并启动
+npm run build
 pm2 start server.js --name ts3-web
 
 # 保存并设置开机自启
@@ -98,6 +104,63 @@ pm2 startup
 
 ```env
 MOCK=true
+```
+
+## 开发指南
+
+### 项目结构
+
+```
+ts3-web/
+├── server.js               # 后端 API
+├── build.js                # 构建混淆脚本
+├── public/
+│   ├── index.src.html      # 前端源码（开发时编辑此文件）
+│   ├── index.html          # 混淆后的文件（自动生成，勿手动编辑）
+│   └── Chinese_Translation_zh-CN.ts3_translation  # 汉化包
+├── package.json
+├── .env.example            # 配置模板
+├── .gitignore
+└── README.md
+```
+
+### 本地开发
+
+```bash
+# 1. 编辑源码（不要直接编辑 index.html）
+vi public/index.src.html
+
+# 2. 本地测试（使用源码）
+cp public/index.src.html public/index.html
+npm start
+
+# 3. 构建混淆版本
+npm run build
+
+# 4. 提交代码
+git add .
+git commit -m "更新说明"
+git push
+```
+
+### 服务器更新
+
+```bash
+# SSH登录服务器
+ssh user@your-server
+
+# 拉取代码
+cd /opt/ts3-web
+git pull
+
+# 安装依赖（如有新增）
+npm install
+
+# 构建混淆版本
+npm run build
+
+# 重启服务
+pm2 restart ts3-web
 ```
 
 ## Server Query 配置
@@ -117,19 +180,6 @@ query_ip=0.0.0.0
 
 ```bash
 echo "你的IP" >> /path/to/teamspeak3-server/query_ip_allowlist.txt
-```
-
-## 项目结构
-
-```
-ts3-web/
-├── server.js           # 后端 API
-├── public/
-│   └── index.html      # 前端界面
-├── package.json
-├── .env.example        # 配置模板
-├── .gitignore
-└── README.md
 ```
 
 ## API
