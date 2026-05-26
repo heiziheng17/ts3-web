@@ -86,7 +86,12 @@ async function fetchServerData() {
       ts3.channelList(),
       ts3.clientList()
     ]);
-    console.log('TS3数据获取成功:', info.virtualserver_name, info.virtualserver_clientsonline);
+    console.log('TS3数据获取成功，开始解析...');
+    console.log('info原始数据:', JSON.stringify(info, null, 2));
+    console.log('channels数量:', channels?.length);
+    console.log('clients数量:', clients?.length);
+    if (channels?.length > 0) console.log('channel示例:', JSON.stringify(channels[0], null, 2));
+    if (clients?.length > 0) console.log('client示例:', JSON.stringify(clients[0], null, 2));
     const channelMap = {};
     channels.forEach(ch => { channelMap[ch.cid] = ch.name; });
     cache.status = {
