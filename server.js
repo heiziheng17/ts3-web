@@ -22,7 +22,6 @@ async function getTs3() {
   if (MOCK) throw new Error('MOCK模式');
   if (ts3Instance) return ts3Instance;
   try {
-    console.log('正在连接TS3:', TS3_CONFIG.host, TS3_CONFIG.queryport);
     ts3Instance = await TeamSpeak.connect(TS3_CONFIG);
     console.log('TS3连接成功');
     ts3Instance.on('close', () => { ts3Instance = null; });
@@ -69,50 +68,42 @@ const MOCK_DATA = {
 };
 
 async function fetchServerData() {
-  console.log('fetchServerData 执行, MOCK:', MOCK);
   if (MOCK) {
     cache.status = MOCK_DATA.status;
     cache.channels = MOCK_DATA.channels;
     cache.clients = MOCK_DATA.clients;
     cache.lastUpdate = Date.now();
-    console.log('MOCK数据已加载');
     return;
   }
   try {
-    console.log('开始获取TS3数据...');
     const ts3 = await getTs3();
     const [info, channels, clients] = await Promise.all([
       ts3.serverInfo(),
       ts3.channelList(),
       ts3.clientList()
     ]);
-    console.log('TS3数据获取成功，开始解析...');
-    console.log('info原始数据:', JSON.stringify(info, null, 2));
-    console.log('channels数量:', channels?.length);
-    console.log('clients数量:', clients?.length);
-    if (channels?.length > 0) console.log('channel示例:', JSON.stringify(channels[0], null, 2));
-    if (clients?.length > 0) console.log('client示例:', JSON.stringify(clients[0], null, 2));
+    console.log('TS3数据获取成功:', info.virtualserverName, info.virtualserverClientsonline);
     const channelMap = {};
-    channels.forEach(ch => { channelMap[ch.cid] = ch.name; });
+    channels.forEach(ch => { channelMap[ch.cid] = ch.channelName; });
     cache.status = {
-      name: info.virtualserver_name,
-      status: info.virtualserver_status,
-      platform: info.virtualserver_platform,
-      version: info.virtualserver_version,
-      clientsOnline: info.virtualserver_clientsonline,
-      maxClients: info.virtualserver_maxclients,
-      uptime: info.virtualserver_uptime,
-      bandwidthUp: info.virtualserver_bytes_uploaded_total,
-      bandwidthDown: info.virtualserver_bytes_downloaded_total,
-      packetsUp: info.virtualserver_serverpackets_sent,
-      packetsDown: info.virtualserver_serverpackets_received,
-      queryPort: TS3_CONFIG.queryPort,
-      voicePort: TS3_CONFIG.serverPort,
+      name: info.virtualserverName,
+      status: info.virtualserverStatus,
+      platform: info.virtualserverPlatform,
+      version: info.virtualserverVersion,
+      clientsOnline: info.virtualserverClientsonline,
+      maxClients: info.virtualserverMaxclients,
+      uptime: info.virtualserverUptime,
+      bandwidthUp: info.connectionBytesSentTotal,
+      bandwidthDown: info.connectionBytesReceivedTotal,
+      packetsUp: info.connectionPacketsSentTotal,
+      packetsDown: info.connectionPacketsReceivedTotal,
+      queryPort: TS3_CONFIG.queryport,
+      voicePort: info.virtualserverPort,
     };
     const chMap = {};
     const tree = [];
     channels.forEach(ch => {
-      chMap[ch.cid] = { id: ch.cid, name: ch.name, parentId: ch.pid, order: ch.channel_order, maxClients: ch.maxclients, codec: ch.codec, children: [] };
+      chMap[ch.cid] = { id: ch.cid, name: ch.channelName, parentId: ch.pid, order: ch.channelOrder, maxClients: ch.channelMaxclients, codec: ch.channelCodec, children: [] };
     });
     channels.forEach(ch => {
       if (ch.pid === '0') tree.push(chMap[ch.cid]);
@@ -122,21 +113,20 @@ async function fetchServerData() {
     sort(tree);
     cache.channels = tree;
     const clientList = [];
-    for (const c of clients.filter(c => c.type === 0)) {
+    for (const c of clients.filter(c => c.clientType === 0)) {
       let latency = 0;
       try {
         const ci = await ts3.execute('clientinfo', { clid: c.clid });
         latency = parseInt(ci.connection_ping) || 0;
       } catch (e) {}
       clientList.push({
-        id: c.clid, nickname: c.nickname, channelId: c.cid,
+        id: c.clid, nickname: c.clientNickname, channelId: c.cid,
         channelName: channelMap[c.cid] || '未知频道',
-        connectedTime: c.connection_connected_time, latency, platform: clientPlatform(c.client_platform), country: c.client_country,
+        connectedTime: c.clientIdleTime || 0, latency, platform: clientPlatform(c.clientPlatform), country: c.clientCountry,
       });
     }
     cache.clients = clientList;
     cache.lastUpdate = Date.now();
-    console.log('数据缓存完成');
   } catch (err) {
     console.error('获取TS3数据失败:', err.message);
   }
@@ -148,7 +138,6 @@ fetchServerData();
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/api/status', (req, res) => {
-  console.log('API /api/status called, cache.status:', cache.status);
   if (cache.status && Object.keys(cache.status).length > 0) return res.json({ success: true, data: cache.status });
   res.json({ success: false, error: '等待数据加载' });
 });
