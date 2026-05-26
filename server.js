@@ -85,12 +85,13 @@ async function fetchServerData() {
     const ip = info.propcache || info;
     const channelMap = {};
     channels.forEach(ch => { const p = ch.propcache || ch; channelMap[ch.cid] = p.channelName; });
+    const normalClients = clients.filter(c => (c.propcache || c).clientType === 0);
     cache.status = {
       name: ip.virtualserverName,
       status: ip.virtualserverStatus,
       platform: ip.virtualserverPlatform,
       version: ip.virtualserverVersion,
-      clientsOnline: ip.virtualserverClientsonline,
+      clientsOnline: normalClients.length,
       maxClients: ip.virtualserverMaxclients,
       uptime: ip.virtualserverUptime,
       bandwidthUp: ip.connectionBytesSentTotal,
@@ -114,7 +115,7 @@ async function fetchServerData() {
     sort(tree);
     cache.channels = tree;
     const clientList = [];
-    for (const c of clients.filter(c => (c.propcache || c).clientType === 0)) {
+    for (const c of normalClients) {
       const p = c.propcache || c;
       let latency = 0;
       try {
