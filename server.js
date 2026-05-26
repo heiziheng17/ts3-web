@@ -82,33 +82,29 @@ async function fetchServerData() {
       ts3.channelList(),
       ts3.clientList()
     ]);
-    console.log('TS3数据获取成功:', info.virtualserverName, info.virtualserverClientsonline);
+    const ip = info.propcache || info;
     const channelMap = {};
-    channels.forEach(ch => { channelMap[ch.cid] = ch.channelName; });
+    channels.forEach(ch => { const p = ch.propcache || ch; channelMap[ch.cid] = p.channelName; });
     cache.status = {
-      name: info.virtualserverName,
-      status: info.virtualserverStatus,
-      platform: info.virtualserverPlatform,
-      version: info.virtualserverVersion,
-      clientsOnline: info.virtualserverClientsonline,
-      maxClients: info.virtualserverMaxclients,
-      uptime: info.virtualserverUptime,
-      bandwidthUp: info.connectionBytesSentTotal,
-      bandwidthDown: info.connectionBytesReceivedTotal,
-      packetsUp: info.connectionPacketsSentTotal,
-      packetsDown: info.connectionPacketsReceivedTotal,
+      name: ip.virtualserverName,
+      status: ip.virtualserverStatus,
+      platform: ip.virtualserverPlatform,
+      version: ip.virtualserverVersion,
+      clientsOnline: ip.virtualserverClientsonline,
+      maxClients: ip.virtualserverMaxclients,
+      uptime: ip.virtualserverUptime,
+      bandwidthUp: ip.connectionBytesSentTotal,
+      bandwidthDown: ip.connectionBytesReceivedTotal,
+      packetsUp: ip.connectionPacketsSentTotal,
+      packetsDown: ip.connectionPacketsReceivedTotal,
       queryPort: TS3_CONFIG.queryport,
       voicePort: info.virtualserverPort,
     };
     const chMap = {};
     const tree = [];
-    console.log('频道数量:', channels.length);
-    if (channels.length > 0) {
-      console.log('第一个频道的所有属性:', Object.keys(channels[0]));
-      console.log('第一个频道详情:', JSON.stringify(channels[0], null, 2));
-    }
     channels.forEach(ch => {
-      chMap[ch.cid] = { id: ch.cid, name: ch.name, parentId: ch.pid, order: ch.order, maxClients: ch.maxClients, codec: ch.codec, children: [] };
+      const p = ch.propcache || ch;
+      chMap[ch.cid] = { id: ch.cid, name: p.channelName, parentId: ch.pid, order: p.channelOrder, maxClients: p.channelMaxclients, codec: p.channelCodec, children: [] };
     });
     channels.forEach(ch => {
       if (ch.pid === '0') tree.push(chMap[ch.cid]);
@@ -118,16 +114,18 @@ async function fetchServerData() {
     sort(tree);
     cache.channels = tree;
     const clientList = [];
-    for (const c of clients.filter(c => c.clientType === 0)) {
+    for (const c of clients.filter(c => (c.propcache || c).clientType === 0)) {
+      const p = c.propcache || c;
       let latency = 0;
       try {
         const ci = await ts3.execute('clientinfo', { clid: c.clid });
-        latency = parseInt(ci.connection_ping) || 0;
+        const cip = ci.propcache || ci;
+        latency = parseInt(cip.connection_ping) || 0;
       } catch (e) {}
       clientList.push({
-        id: c.clid, nickname: c.clientNickname, channelId: c.cid,
+        id: c.clid, nickname: p.clientNickname, channelId: c.cid,
         channelName: channelMap[c.cid] || '未知频道',
-        connectedTime: c.clientIdleTime || 0, latency, platform: clientPlatform(c.clientPlatform), country: c.clientCountry,
+        connectedTime: p.clientIdleTime || 0, latency, platform: clientPlatform(p.clientPlatform), country: p.clientCountry,
       });
     }
     cache.clients = clientList;
