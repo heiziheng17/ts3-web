@@ -5,14 +5,14 @@ const JavaScriptObfuscator = require('javascript-obfuscator');
 
 console.log('开始构建...');
 
-const apiKey = process.env.API_KEY || '';
+const apiSecret = process.env.API_SECRET || '';
 
 const srcPath = path.join(__dirname, 'public', 'index.src.html');
 const htmlPath = path.join(__dirname, 'public', 'index.html');
 
 let html = fs.readFileSync(srcPath, 'utf-8');
 
-html = html.replace('__API_KEY__', apiKey);
+html = html.replace('__API_KEY__', apiSecret);
 
 const scriptRegex = /<script>([\s\S]*?)<\/script>/g;
 let match;
@@ -64,4 +64,4 @@ for (const m of matches) {
 fs.writeFileSync(htmlPath, html, 'utf-8');
 
 console.log(`构建完成！混淆了 ${count} 段脚本`);
-console.log(`API Key: ${apiKey ? '已注入' : '未设置（无需鉴权）'}`);
+console.log(`API Secret: ${apiSecret ? '已注入' : '未设置（无需鉴权）'}`);

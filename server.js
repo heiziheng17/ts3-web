@@ -139,13 +139,34 @@ async function fetchServerData() {
 setInterval(fetchServerData, 10000);
 fetchServerData();
 
-const API_KEY = process.env.API_KEY || '';
+const crypto = require('crypto');
+const API_SECRET = process.env.API_SECRET || '';
 
 function authMiddleware(req, res, next) {
-  if (!API_KEY) return next();
-  const key = req.query.key || req.headers['x-api-key'];
-  if (key === API_KEY) return next();
-  res.status(401).json({ success: false, error: '未授权访问' });
+  if (!API_SECRET) return next();
+  
+  const timestamp = req.headers['x-api-timestamp'];
+  const nonce = req.headers['x-api-nonce'];
+  const sign = req.headers['x-api-sign'];
+  
+  if (!timestamp || !nonce || !sign) {
+    return res.status(401).json({ success: false, error: '缺少认证参数' });
+  }
+  
+  const now = Math.floor(Date.now() / 1000);
+  if (Math.abs(now - parseInt(timestamp)) > 30) {
+    return res.status(401).json({ success: false, error: '请求已过期' });
+  }
+  
+  const expectedSign = crypto.createHmac('sha256', API_SECRET)
+    .update(timestamp + nonce)
+    .digest('hex');
+  
+  if (sign !== expectedSign) {
+    return res.status(401).json({ success: false, error: '签名验证失败' });
+  }
+  
+  next();
 }
 
 app.use(express.static(path.join(__dirname, 'public')));
