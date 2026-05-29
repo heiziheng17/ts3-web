@@ -231,4 +231,4 @@ echo "你的IP" >> /path/to/teamspeak3-server/query_ip_allowlist.txt
 
 ## 开源仓库
 
-https://gitee.com/dalovemoli/ts3-web
+https://github.com/h1tzh/ts3-web
